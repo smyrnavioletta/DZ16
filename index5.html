@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 05</title>
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .task-list {
+            width: 500px;
+        }
+
+        #start-message {
+            margin: 10px;
+        }
+
+        .task {
+            display: flex;
+            align-items: center;
+            border: 1px solid gray;
+            padding: 3px 8px;
+            margin: 2px 10px;
+        }
+
+        .task p {
+            margin-left: 4px;
+        }
+
+        .completed {
+            background-color: green;
+            color: white;
+        }
+
+        .completed p {
+            text-decoration: line-through;
+        }
+
+        .input-panel {
+            width: 500px;
+            margin: 8px;
+            padding: 2px;
+        }
+
+        .input-panel button {
+            padding: 4px;
+            width: 25%;
+        }
+
+        .input-panel input {
+            height: 23px;
+            padding-left: 4px;
+            width: 68%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="input-panel">
+        <input type="text" id="task-name-input">
+        <button id="add-task-btn">Додати завдання</button>
+    </div>
+    <div class="input-panel">
+        <button id="show-all-btn">Усі</button>
+        <button id="show-not-completed-btn">Незавершені</button>
+    </div>
+    <div class="task-list">
+        <p id="start-message">Немає нових завдань</p>
+    </div>
+
+    <script>
+
+        /*
+        Завдання:
+        Додайте логіку обробки статус-кодів помилок клієнта та серверної сторони.
+        Передбачте обробку та виведення винятків, які пов'язані з іншими проблемами за мережевих запитів.
+        */
+        class Task {
+            constructor(text) {
+                this.text = text;
+                this.isDone = false;
+            }
+        }
+
+        let dataService = {
+            url: "https://jsonplaceholder.typicode.com/todos",
+
+            get allTasks() {
+                return fetch(this.url)
+                    .then(response => response.json())
+                    .then(json => this.mapArray(json));
+            },
+
+            get notCompletedTasks() {
+                return fetch(this.url + "?completed=false")
+                    .then(response => response.json())
+                    .then(json => this.mapArray(json));
+            },
+
+            add(task) {
+                return fetch(this.url, {
+                    method: "POST",
+                    body: JSON.stringify({ title: task.text, completed: task.isDone })
+                })
+                    .then(response => response.json());
+            },
+
+            update(task) {
+                return fetch(this.url + "/" + task.id, {
+                    method: "PUT",
+                    body: JSON.stringify({ title: task.text, completed: task.isDone })
+                })
+                    .then(response => response.json());
+            },
+
+            mapArray(array) {
+                return array.map(element => {
+                    return {
+                        id: element.id,
+                        text: element.title,
+                        isDone: element.completed
+                    }
+                });
+            }
+        }
+
+        class TasksListView {
+            element;
+            dataService;
+
+            constructor(element) {
+                this.element = element;
+                dataService = dataService;
+            }
+
+            #drawList(tasksElements) {
+                this.element.innerHTML = "";
+
+                tasksElements.forEach(taskElement => {
+                    taskElement.createIn(this.element);
+                });
+            }
+
+            drawAll() {
+                let taskElements = [];
+                dataService.allTasks.then(tasks => {
+                    if (tasks.length == 0) return;
+
+                    tasks.forEach(task => {
+                        taskElements.push(new TaskView(task))
+                    });
+                    this.#drawList(taskElements);
+                });
+            }
+
+            drawNotCompleted() {
+                let taskElements = [];
+                dataService.notCompletedTasks.then(tasks => {
+                    if (tasks.length == 0) return;
+
+                    tasks.forEach(task => {
+                        taskElements.push(new TaskView(task))
+                    });
+                    this.#drawList(taskElements);
+                });
+            }
+        }
+
+        class Task {
+    constructor(text) {
+        this.text = text;
+        this.isDone = false;
+    }
+}
+
+let dataService = {
+    url: "https://jsonplaceholder.typicode.com/todos",
+
+    fetchWithErrorHandling(url, options) {
+        return fetch(url, options)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            }).catch(error => {
+                console.error("Network error or JSON parsing error:", error);
+                throw error; // Rethrow to handle it in specific functions
+            });
+    },
+
+    get allTasks() {
+        return this.fetchWithErrorHandling(this.url);
+    },
+
+    get notCompletedTasks() {
+        return this.fetchWithErrorHandling(`${this.url}?completed=false`);
+    },
+
+    add(task) {
+        return this.fetchWithErrorHandling(this.url, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: task.text, completed: task.isDone })
+        });
+    },
+
+    update(task) {
+        return this.fetchWithErrorHandling(`${this.url}/${task.id}`, {
+            method: "PUT",
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title: task.text, completed: task.isDone })
+        });
+    }
+};
+
+class TasksListView {
+    constructor(element) {
+        this.element = element;
+    }
+
+    drawList(tasks) {
+        this.element.innerHTML = "";
+        tasks.forEach(task => {
+            const taskView = new TaskView(task);
+            taskView.createIn(this.element);
+        });
+    }
+
+    drawAll() {
+        dataService.allTasks.then(tasks => this.drawList(tasks))
+            .catch(error => alert("Error loading all tasks: " + error.message));
+    }
+
+    drawNotCompleted() {
+        dataService.notCompletedTasks.then(tasks => this.drawList(tasks))
+            .catch(error => alert("Error loading not completed tasks: " + error.message));
+    }
+}
+
+class TaskView {
+    constructor(task) {
+        this.task = task;
+    }
+
+    createIn(element) {
+        const div = document.createElement("div");
+        div.className = "task" + (this.task.isDone ? " completed" : "");
+        div.innerHTML = `
+            <input type="checkbox" ${this.task.isDone ? "checked" : ""} onclick="toggleTaskCompletion(${this.task.id})">
+            <p>${this.task.text}</p>
+        `;
+        element.appendChild(div);
+    }
+}
+
+function toggleTaskCompletion(id) {
+    // Find the task by id, toggle its completion status and update
+    const task = tasksListView.tasks.find(task => task.id === id);
+    if (task) {
+        task.isDone = !task.isDone;
+        dataService.update(task).catch(error => alert("Error updating task: " + error.message));
+    }
+}
+
+let taskNameInput = document.getElementById("task-name-input");
+document.getElementById("add-task-btn").addEventListener("click", () => {
+    const text = taskNameInput.value.trim();
+    if (text) {
+        const newTask = new Task(text);
+        dataService.add(newTask).then(() => {
+            tasksListView.drawAll();
+            taskNameInput.value = ''; // Clear input after adding
+        }).catch(error => alert("Error adding new task: " + error.message));
+    } else {
+        alert("Please enter a task name.");
+    }
+});
+
+let tasksListView = new TasksListView(document.querySelector(".task-list"));
+window.onload = () => tasksListView.drawAll();
+
+    </script>
+</body>
+
+</html>

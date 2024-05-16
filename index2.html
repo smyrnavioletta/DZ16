@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 02</title>
+</head>
+
+<body>
+    <form id="postForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+        <br><br>
+        <label for="body">Body:</label>
+        <input type="text" id="body" name="body" required>
+        <br><br>
+        <button type="button" id="updateButton">Update Post</button>
+    </form>
+    <div id="message"></div>
+
+    <script>
+          /*
+        Завдання:
+        Напишіть сценарій, який оновлюватиме сутність post з властивостями
+        id: 1,
+        title: 'foo',
+        body: 'bar',
+        userId: 1,
+
+        Створіть форму з полем введення для значення властивості title та полем введення для значення властивості body.
+
+        Значення для властивостей title та body отримайте від користувача.
+        Значення id та userId мають дорівнювати 1. Виводити їх у формі не потрібно.
+        Під час завантаження сценарію заповніть форму даними, які були отримані під час обробки GET-запиту на https://jsonplaceholder.typicode.com/posts/1.
+
+        Адреса для надсилання запиту
+        https://jsonplaceholder.typicode.com/posts/1.
+
+        Для оновлення сутності скористайтесь PUT-запитом https://jsonplaceholder.typicode.com/posts/1. Опрацюйте відповідь
+        і виведіть інформацію про помилку або успішно завершену операцію.
+        */
+        const apiUrl = 'https://jsonplaceholder.typicode.com/posts/1';
+
+        // Функція для отримання початкових даних та заповнення форми
+        function fetchInitialData() {
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('title').value = data.title;
+                    document.getElementById('body').value = data.body;
+                })
+                .catch(error => {
+                    document.getElementById('message').innerText = 'Failed to fetch post: ' + error.message;
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchInitialData);
+
+        document.getElementById('updateButton').addEventListener('click', function() {
+            const title = document.getElementById('title').value;
+            const body = document.getElementById('body').value;
+
+            // Створення об'єкту для оновлення
+            const postData = {
+                id: 1,
+                userId: 1,
+                title: title,
+                body: body
+            };
+
+            // Відправка оновлень за допомогою PUT-запиту
+            fetch(apiUrl, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(postData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to update: ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(updatedPost => {
+                document.getElementById('message').innerText = 'Post updated successfully: ' + JSON.stringify(updatedPost);
+            })
+            .catch(error => {
+                document.getElementById('message').innerText = 'Update failed: ' + error.message;
+            });
+        });
+    </script>
+</body>
+
+</html>

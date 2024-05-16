@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 04</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="table-container"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiUrl = 'https://jsonplaceholder.typicode.com/todos';
+            const tableContainer = document.getElementById('table-container');
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const table = document.createElement('table');
+                    table.border = '1';
+
+                    // Створення заголовків таблиці
+                    const thead = document.createElement('thead');
+                    const headerRow = document.createElement('tr');
+                    const headers = ['ID', 'User ID', 'Title', 'Completed'];
+                    headers.forEach(headerText => {
+                        const th = document.createElement('th');
+                        th.textContent = headerText;
+                        headerRow.appendChild(th);
+                    });
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+
+                    // Створення рядків таблиці з даними
+                    const tbody = document.createElement('tbody');
+                    data.forEach(todo => {
+                        const row = document.createElement('tr');
+
+                        const cellId = document.createElement('td');
+                        cellId.textContent = todo.id;
+                        row.appendChild(cellId);
+
+                        const cellUserId = document.createElement('td');
+                        cellUserId.textContent = todo.userId;
+                        row.appendChild(cellUserId);
+
+                        const cellTitle = document.createElement('td');
+                        cellTitle.textContent = todo.title;
+                        row.appendChild(cellTitle);
+
+                        const cellCompleted = document.createElement('td');
+                        cellCompleted.textContent = todo.completed ? 'Yes' : 'No';
+                        row.appendChild(cellCompleted);
+
+                        tbody.appendChild(row);
+                    });
+                    table.appendChild(tbody);
+
+                    // Додавання таблиці до контейнера
+                    tableContainer.appendChild(table);
+                })
+                .catch(error => {
+                    const errorMessage = document.createElement('p');
+                    errorMessage.textContent = 'Failed to load todos: ' + error.message;
+                    tableContainer.appendChild(errorMessage);
+                });
+        });
+    </script>
+</body>
+
+</html>
